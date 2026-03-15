@@ -1,0 +1,19 @@
+English | [简体中文](partitions.zh-CN.md)
+
+# Timesheet export partitions
+
+The prototype receives one CSV file with employee, date, start and end. Each row represents one shift. Tests use synthetic names. Base choice is comma, ISO date, 24-hour time, LF, no BOM, one row; one class changes at a time. The quoted comma and delimiter interaction is explicit because a plain `split` would fail. A midnight row checks the relation between date and times.
+
+| Variable | Product importer supports | Rejected with error |
+| --- | --- | --- |
+| Delimiter | comma, semicolon, tab, chosen from header | mixed delimiter within file |
+| Header names | employee/employee name/staff; date/shift date; start/start time; end/end time, case insensitive | unknown/missing header |
+| Date | ISO `yyyy-MM-dd`, Australian `d/M/yyyy` with strict calendar validation | invalid date or other format |
+| Time | 24-hour `HH:mm`, 12-hour `h:mm AM/PM` | malformed time |
+| BOM | UTF-8 BOM at beginning, or none | BOM inside data |
+| Quoting | comma in quoted employee name, doubled quote | unclosed quote |
+| Rows | blank rows ignored | wrong column count, empty employee |
+| Line ending | CRLF or LF | bare CR |
+| Shift relation | end earlier than start means next day | equal start/end, longer than 24 hours |
+
+The product importer should use a maintained CSV parser for full quoting and streaming; this small parser demonstrates the decisions and their tests. Newline characters inside quoted fields are outside the prototype contract and need an explicit decision in the product importer.
