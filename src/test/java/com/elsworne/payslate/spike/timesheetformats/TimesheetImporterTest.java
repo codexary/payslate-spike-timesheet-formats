@@ -55,7 +55,17 @@ class TimesheetImporterTest {
             "cross_midnight",
             "employee,date,start,end\nAva,2026-02-13,23:00,01:00",
             "Ava",
-            "2026-02-14T01:00"));
+            "2026-02-14T01:00"),
+        Arguments.of(
+            "holiday_true",
+            "employee,date,start,end,public holiday\nAva,2026-02-16,09:00,10:00,true",
+            "Ava",
+            "2026-02-16T10:00"),
+        Arguments.of(
+            "holiday_false",
+            "employee,date,start,end,public holiday\nAva,2026-02-16,09:00,10:00,false",
+            "Ava",
+            "2026-02-16T10:00"));
   }
 
   @ParameterizedTest(name = "{0}")
@@ -65,6 +75,7 @@ class TimesheetImporterTest {
     assertThat(shifts).as(partition).hasSize(1);
     assertThat(shifts.getFirst().employee()).isEqualTo(name);
     assertThat(shifts.getFirst().end().toString()).isEqualTo(end);
+    assertThat(shifts.getFirst().publicHoliday()).isEqualTo(partition.equals("holiday_true"));
   }
 
   static Stream<Arguments> rejectedPartitions() {
@@ -81,7 +92,11 @@ class TimesheetImporterTest {
             "employee,date,start,end\nAva;2026-02-16;09:00;10:00",
             "column count"),
         Arguments.of(
-            "zero_duration", "employee,date,start,end\nAva,2026-02-16,09:00,09:00", "Row 2"));
+            "zero_duration", "employee,date,start,end\nAva,2026-02-16,09:00,09:00", "Row 2"),
+        Arguments.of(
+            "invalid_holiday",
+            "employee,date,start,end,public holiday\nAva,2026-02-16,09:00,10:00,maybe",
+            "Row 2"));
   }
 
   @ParameterizedTest(name = "{0}")

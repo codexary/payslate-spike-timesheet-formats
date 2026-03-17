@@ -12,7 +12,8 @@ import java.util.Locale;
 
 /** Small prototype for the product importer contract. */
 public final class TimesheetImporter {
-  public record Shift(String employee, LocalDateTime start, LocalDateTime end) {}
+  public record Shift(
+      String employee, LocalDateTime start, LocalDateTime end, boolean publicHoliday) {}
 
   private static final DateTimeFormatter AU_DATE =
       new DateTimeFormatterBuilder()
@@ -34,6 +35,7 @@ public final class TimesheetImporter {
     int date = column(header, "date", "shift date");
     int start = column(header, "start", "start time");
     int end = column(header, "end", "end time");
+    int holiday = optionalColumn(header, "public holiday", "public_holiday", "holiday");
     var shifts = new ArrayList<Shift>();
     for (int line = 1; line < lines.length; line++) {
       if (lines[line].isBlank()) continue;
@@ -52,7 +54,17 @@ public final class TimesheetImporter {
         if (to.isBefore(from)) to = to.plusDays(1);
         if (!to.isAfter(from) || !to.isBefore(from.plusHours(25)))
           throw new IllegalArgumentException("duration");
-        shifts.add(new Shift(employee, from, to));
+        String holidayText = holiday < 0 ? "" : cells.get(holiday).trim();
+        boolean publicHoliday;
+        if (holidayText.isEmpty()
+            || holidayText.equalsIgnoreCase("false")
+            || holidayText.equalsIgnoreCase("no")
+            || holidayText.equals("0")) publicHoliday = false;
+        else if (holidayText.equalsIgnoreCase("true")
+            || holidayText.equalsIgnoreCase("yes")
+            || holidayText.equals("1")) publicHoliday = true;
+        else throw new IllegalArgumentException("invalid public holiday flag");
+        shifts.add(new Shift(employee, from, to, publicHoliday));
       } catch (RuntimeException error) {
         throw new IllegalArgumentException(
             "Row " + (line + 1) + ": invalid date, time or duration", error);
@@ -68,12 +80,18 @@ public final class TimesheetImporter {
   }
 
   private static int column(List<String> header, String... aliases) {
+    int found = optionalColumn(header, aliases);
+    if (found >= 0) return found;
+    throw new IllegalArgumentException("Unknown or missing header: " + String.join("/", aliases));
+  }
+
+  private static int optionalColumn(List<String> header, String... aliases) {
     for (int i = 0; i < header.size(); i++) {
       for (String alias : aliases) {
         if (header.get(i).trim().equalsIgnoreCase(alias)) return i;
       }
     }
-    throw new IllegalArgumentException("Unknown or missing header: " + String.join("/", aliases));
+    return -1;
   }
 
   private static List<String> fields(String row, char delimiter) {
