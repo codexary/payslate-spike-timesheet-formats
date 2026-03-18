@@ -27,6 +27,10 @@ public final class TimesheetImporter {
     if (input == null) throw new IllegalArgumentException("CSV is null");
     String content = input.startsWith("\uFEFF") ? input.substring(1) : input;
     String[] lines = content.split("\r?\n", -1);
+    for (int line = 0; line < lines.length; line++) {
+      if (lines[line].contains("\r"))
+        throw new IllegalArgumentException("Row " + (line + 1) + ": bare CR");
+    }
     if (lines.length == 0 || lines[0].isBlank())
       throw new IllegalArgumentException("Missing header");
     char delimiter = lines[0].contains("\t") ? '\t' : lines[0].contains(";") ? ';' : ',';
@@ -52,8 +56,7 @@ public final class TimesheetImporter {
         LocalDateTime from = day.atTime(time(cells.get(start).trim()));
         LocalDateTime to = day.atTime(time(cells.get(end).trim()));
         if (to.isBefore(from)) to = to.plusDays(1);
-        if (!to.isAfter(from) || !to.isBefore(from.plusHours(25)))
-          throw new IllegalArgumentException("duration");
+        if (!to.isAfter(from)) throw new IllegalArgumentException("duration");
         String holidayText = holiday < 0 ? "" : cells.get(holiday).trim();
         boolean publicHoliday;
         if (holidayText.isEmpty()

@@ -12,9 +12,11 @@ The prototype receives one CSV file with employee, date, start and end, plus an 
 | Time | 24-hour `HH:mm`, 12-hour `h:mm AM/PM` | malformed time |
 | Public holiday | optional `public holiday`/`public_holiday`/`holiday`; true/yes/1 or false/no/0/blank, case insensitive; absent means false | any other value |
 | BOM | UTF-8 BOM at beginning, or none | BOM inside data |
-| Quoting | comma in quoted employee name, doubled quote | unclosed quote |
+| Quoting | comma in quoted employee name, doubled quote | unclosed quote, newline inside quoted field |
 | Rows | blank rows ignored | wrong column count, empty employee |
 | Line ending | CRLF or LF | bare CR |
-| Shift relation | end earlier than start means next day | equal start/end, longer than 24 hours |
+| Shift relation | end earlier than start means next day | equal start/end |
 
-The product importer should use a maintained CSV parser for full quoting and streaming; this small parser demonstrates the decisions and their tests. Newline characters inside quoted fields are outside the prototype contract and need an explicit decision in the product importer.
+Each row has one date and two times. With an earlier end interpreted as the next day, unequal times always produce a shift shorter than 24 hours; equal times produce zero duration and are rejected. Shifts of 24 hours or longer cannot be expressed in this format, so longer than 24 hours is not a reachable rejection class.
+
+The product importer should use a maintained CSV parser for full quoting and streaming; this small parser demonstrates the decisions and their tests. The prototype rejects newlines inside quoted fields with an unclosed quoted field error. Support for such files needs an explicit decision in the product importer.

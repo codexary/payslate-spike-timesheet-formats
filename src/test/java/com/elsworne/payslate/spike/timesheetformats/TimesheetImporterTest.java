@@ -57,6 +57,11 @@ class TimesheetImporterTest {
             "Ava",
             "2026-02-14T01:00"),
         Arguments.of(
+            "nearly_24_hours",
+            "employee,date,start,end\nAva,2026-02-16,09:00,08:59",
+            "Ava",
+            "2026-02-17T08:59"),
+        Arguments.of(
             "holiday_true",
             "employee,date,start,end,public holiday\nAva,2026-02-16,09:00,10:00,true",
             "Ava",
@@ -84,6 +89,16 @@ class TimesheetImporterTest {
             "unknown_header", "worker,date,start,end\nAva,2026-02-16,09:00,10:00", "header"),
         Arguments.of(
             "malformed_quote", "employee,date,start,end\n\"Ava,2026-02-16,09:00,10:00", "quoted"),
+        Arguments.of(
+            "quoted_newline",
+            "employee,date,start,end\n\"Ava\nTest\",2026-02-16,09:00,10:00",
+            "Unclosed quoted field"),
+        Arguments.of(
+            "bare_cr", "employee,date,start,end\rAva,2026-02-16,09:00,10:00\r", "Row 1: bare CR"),
+        Arguments.of(
+            "bare_cr_in_data",
+            "employee,date,start,end\nAva,2026-02-16,09:00,10:00\r",
+            "Row 2: bare CR"),
         Arguments.of("invalid_date", "employee,date,start,end\nAva,31/2/2026,09:00,10:00", "Row 2"),
         Arguments.of(
             "empty_employee", "employee,date,start,end\n,2026-02-16,09:00,10:00", "empty employee"),
