@@ -54,4 +54,4 @@ Required header lookup does not reject all unknown extra columns. There is also 
 
 The prototype parser is not the product parser. Keep the accepted and rejected representatives as contract examples, then implement the product boundary with a maintained CSV parser and streaming input. Add checks for the full header, date/time, BOM, quoting and Boolean contract, and decide quoted-newline support explicitly. Real vendor files and product integration still need their own validation.
 
-The prototype's 22 tests do not prove that importer or any real vendor export works.
+The product decision is recorded in [ADR 0003: Timesheet format contract](https://github.com/codexary/payslate/blob/main/docs/adr/0003-timesheet-format-contract.md). The prototype's 22 tests do not prove that importer or any real vendor export works.
